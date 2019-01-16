@@ -10,11 +10,16 @@ const propEq = curry((key, val, obj) => go(obj, prop(key), equals(val)));
 const curry1 = f => (...a) =>
   a.length > 1 ? f(...a) : (...b) => f(a[0], ...b);
 
-const reduce = curry((f, acc, coll) => {
-  for (const item of coll) acc = f(acc, item);
-
-  return acc;
-});
+  const reduce = curry1((f, acc, coll) => {
+    if (coll === undefined) {
+      coll = acc[Symbol.iterator]();
+      acc = coll.next().value;
+    }
+  
+    for (const item of coll) acc = f(acc, item);
+  
+    return acc;
+  });
 
 const _set = (key, val, obj = {}) => ((obj[key] = val), obj);
 const _push = (val, arr = []) => (arr.push(val), arr);

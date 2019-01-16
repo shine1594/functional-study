@@ -4,7 +4,6 @@ const curry1 = f => (...a) =>
   a.length > 1 ? f(...a) : (...b) => f(a[0], ...b);
 
 const reduce = curry1((f, acc, coll) => {
-  console.log(acc, coll);
   if (coll === undefined) {
     coll = acc[Symbol.iterator]();
     acc = coll.next().value;
