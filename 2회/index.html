@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <script src="./f.js"></script>
+
+    <script type="module">
+      const products = [
+        { id: 0, name: 'iphone xs', color: 'silver', price: 1100 },
+        { id: 1, name: 'iphone xr', color: 'red', price: 890 },
+        { id: 2, name: 'ipad pro 3', color: 'spacegray', price: 890 },
+        { id: 3, name: 'macbook pro', color: 'silver', price: 2500 },
+        { id: 4, name: 'imac 5k', color: 'silver', price: 2300 }
+      ];
+
+      /* 실버 색상의 상품의 가격 합계 구하기 */
+
+      // 메서드 체이닝 방식
+      
+      log(
+        products
+          .filter(({ color }) => color === 'silver')
+          .map(({ price }) => price)
+          .map(price => price * 1100)
+          .reduce(add)
+        );
+
+
+      // 앞에서 구현한 map, filter, reduce로 구현
+        // propEq함수 만들기
+
+      const silverItems = filter(({color}) => color === 'silver', products);
+      log(silverItems);
+
+      const priceList = map(({price}) => price, silverItems);
+      log(priceList);
+
+      const krwPriceList = map(price => price * 1100, priceList);
+      log(krwPriceList);
+
+      const totalPrice = reduce(add, krwPriceList);
+      log(totalPrice);
+
+      // 한 번에 합성하여 호출하기
+      log(
+        reduce(add, 
+          map(price => price * 1100,
+            map(({price}) => price,
+              filter(({color}) => color === 'silver', products)))));
+
+      
+
+      // compose 사용 예시
+      // const printTotalPrice = compose(
+      //   log,
+      //   krwPriceList => reduce(add, krwPriceList),
+      //   priceList => map(price => price * 1100, priceList),
+      //   silverItems => map(({price}) => price, silverItems),
+      //   products => filter(({color}) => color === 'silver', products)
+      // );
+
+      clear();
+
+      // pipe
+
+      const pipe = (f1, ...fns) =>
+        (...args) => reduce((acc, f) => f(acc), f1(...args), fns);
+
+      const printTotalPrice = pipe(
+        products => filter(({color}) => color === 'silver', products),
+        silverItems => map(({price}) => price, silverItems),
+        priceList => map(price => price * 1100, priceList),
+        krwPriceList => reduce(add, krwPriceList),
+        log
+      );
+
+      printTotalPrice(products, 1, 2, 3);
+
+      // go
+      const go = (value, ...fns) => pipe(...fns)(value);
+
+      // propEq 다시보기
+
+      // curry1
+      const curry1 = f => a => (...args) => f(a, ...args);
+
+      const equals = curry1((a, b) => a === b);
+      const prop = curry1((key, obj) => obj[key]);
+      const propEq = (key, val) => obj => {
+        log(prop(key, obj), val);
+        return equals(prop(key, obj), val);
+      }
+
+      const multiply = curry1((a, b) => a * b);
+
+
+      // 자동 커링
+
+      // map, filter에 커링적용해서 코드 간결하게
+      const toKRW = pipe(
+        prop("price"),
+        multiply(1100)
+      );
+
+      const hi = v => (log(v), v);
+
+      go(
+        filter(propEq('color', 'silver'), products),
+        hi,
+        priceList => map(toKRW, priceList),
+        hi,
+        krwPriceList => reduce(add, krwPriceList),
+        log
+      )
+
+      // function curry(f) {
+      //   const len = f.length;
+      //   let args = [];
+
+      //   log(len);
+
+      //   return function inner(...args2) {
+      //     log(args);
+      //     log(args2);
+      //     args = args.concat(args2);
+      //     if (len <= args.length) return f(...args);
+      //     else return inner;
+      //   }
+      // }
+
+      // const add5 = (a,b,c,d,e) => a + b + c + d + e;
+      // log(
+      //   curry(add5)(1)(2,3,4)(5));
+    </script>
+  </body>
+</html>

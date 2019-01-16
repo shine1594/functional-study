@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <script src="./f.js"></script>
+
+    <script type="module">
+      const products = [
+        { id: 0, name: 'iphone xs', color: 'silver', price: 1100 },
+        { id: 1, name: 'iphone xr', color: 'red', price: 890 },
+        { id: 2, name: 'ipad pro 3', color: 'spacegray', price: 890 },
+        { id: 3, name: 'macbook pro', color: 'silver', price: 2500 },
+        { id: 4, name: 'imac 5k', color: 'silver', price: 2300 }
+      ];
+
+      const add = curry((a, b) => a + b);
+      const multiply = curry((a, b) => a * b);
+      const equals = curry((a, b) => a === b);
+      const prop = curry((key, obj) => obj[key]);
+      const propEq = curry((key, val, obj) => go(obj, prop(key), equals(val)));
+
+      // log(
+      //   products
+      //     .filter(({ color }) => color === 'silver')
+      //     .map(({ price }) => price)
+      //     .map(price => price * 1100)
+      //     .reduce(add)
+      //   );
+
+      go(
+        products,
+        filter(propEq('color', 'silver')),
+        map(prop('price')),
+        map(multiply(1100)),
+        reduce(add),
+        log
+      )
+
+      clear();
+
+      // curry partial 비교
+
+      
+      // _
+      // const _ = Symbol('arg');
+
+      // const partial = (f, ...args1) => (...args2) => {
+      //   const args = [];
+      //   const args2Iter = args2[Symbol.iterator]();
+
+      //   // args1: [_, 2, _]
+      //   // args2: [1, 3] 
+
+      //   // args: [1, 2, 3]
+
+      //   for (const arg of args1) {
+      //     args.push(arg === _ ? args2Iter.next().value: arg);
+      //   }
+
+      //   for (const arg of args2Iter) {
+      //     args.push(arg);
+      //   }
+
+      //   // [1,2,3,5,6]
+      //   return f(...args);
+      // };
+
+      // const addAll = (...args) => reduce(add, args);
+      // log(partial(addAll, _, 2, _)(1, 3));
+
+      // ___
+      const _ = Symbol('param');
+      const ___ = Symbol('rest params');
+
+      const revserIter = function* (iter) {
+        const arr = [...iter];
+
+        for (let i = arr.length - 1; i > -1; i--) {
+          yield arr[i];
+        }
+      };
+
+      const partial = (f, ...args1) => (...args2) => {
+        const left = [], right = [];
+        const args1Iter = args1[Symbol.iterator]();
+        const args2Iter = args2[Symbol.iterator]();
+
+        // args1: [_, 2, ___, 5, _, 7]
+        // args2: [1, 3, 4, 6, 8] 
+
+        // left: [1, 2]
+
+        for (const arg of args1Iter) {
+          if (arg === ___) break;
+          left.push(arg === _ ? args2Iter.next().value: arg);
+        }
+
+        const arsg2reverseIter = revserIter(args2Iter);
+        for (const arg of revserIter(args1Iter)) {
+          right.unshift(arg === _ ? arsg2reverseIter.next().value : arg);
+        }
+
+        return f(...left, ...revserIter(arsg2reverseIter), ...right);
+      };
+
+      const addAll = (...args) => reduce(add, args);
+      log(partial(addAll, _, 2, _)(1, 3));
+
+    </script>
+  </body>
+</html>

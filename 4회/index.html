@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        width: 100%;
+        border: 1px solid;
+        border-collapse: collapse;
+      }
+
+      thead > tr {
+        border-bottom: 1px solid;
+      }
+
+      thead > tr > th:not(:last-child),
+      tbody > tr > td:not(:last-child) {
+        border-right: 1px solid;
+      }
+
+      th,
+      td {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script src="./f.js"></script>
+    <script>
+      const promise = fetch("https://api.github.com/users/shine1594/repos");
+
+      document.addEventListener("DOMContentLoaded", _ => {
+        function main(json) {
+          const keys = [
+            "name",
+            "url",
+            "private",
+            "forks_count",
+            "updated_at",
+            "default_branch"
+          ];
+
+          const pick = curry((keys, obj) =>
+            go(keys, reduce((acc, key) => ({ ...acc, [key]: obj[key] }), {}))
+          );
+
+          const join = curry((sep, arr) => arr.join(sep));
+
+          const joinByEmpty = join("");
+
+          const makeTag = curry(
+            (name, content) => `<${name}>${content}</${name}>`
+          );
+
+          const makeTr = makeTag("tr");
+          const makeTh = makeTag("th");
+          const makeTd = makeTag("td");
+
+          const makeTable = (thead, tbody) => makeTag("table", thead + tbody);
+          const makeThead = makeTag("thead");
+          const makeTbody = makeTag("tbody");
+
+          const makeRow = item =>
+            go(item, Object.values, map(makeTd), joinByEmpty, makeTr);
+
+          const setHtml = curry((el, htmlStr) => {
+            el.innerHTML = htmlStr;
+          });
+
+          const renderRepositoryTable = go(
+            json,
+            map(pick(keys)),
+            data =>
+              makeTable(
+                go(keys, map(makeTh), joinByEmpty, makeTr, makeThead),
+                go(data, map(makeRow), joinByEmpty, makeTbody)
+              ),
+            setHtml(document.querySelector("#app"))
+          );
+        }
+
+        promise.then(res => res.json()).then(main);
+      });
+    </script>
+
+    <script>
+      const L = {};
+
+      L.range = curry(function*(start, end) {
+        while (start < end) yield start++;
+      });
+
+      L.map = curry(function*(f, coll) {
+        for (const item of coll) {
+          yield f(item);
+        }
+      });
+
+      L.filter = curry(function*(f, coll) {
+        for (const item of coll) if (f(item)) yield item;
+      });
+
+      const take = curry((size, coll) => {
+        const res = [];
+        let i = 0;
+
+        for (const item of coll) {
+          if (++i > size) break;
+          res.push(item);
+        }
+
+        return res;
+      });
+
+      const takeAll = take(Infinity);
+
+      go(100, L.range(0), L.filter(a => a % 2), take(5), log);
+    </script>
+  </body>
+</html>
