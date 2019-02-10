@@ -1,1 +1,1 @@
-# functional-study
+# 레코벨 사내 발표 자료
